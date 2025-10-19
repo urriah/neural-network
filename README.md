@@ -2,6 +2,6 @@
 A neural network for predicting tech.
 
 The program uses:
-Python
-NumPy
-Matplotlib
+<br>Python
+<br>NumPy
+<br>Matplotlib
