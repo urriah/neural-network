@@ -1,2 +1,4 @@
 # neural-network
-A neural network from scratch.
+Neural network from scratch.
+
+A plain neural network in Python.
