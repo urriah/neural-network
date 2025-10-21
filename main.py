@@ -32,6 +32,13 @@ class Activation_Softmax:
     # Forward pass
     def forward(self, inputs):
 
+        # Get unnormalized probabilities
+        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+
+        # Normalize them for each sample
+        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
+
+        self.output = probabilities
 
 # Common loss class
 class Loss:
@@ -75,15 +82,10 @@ class Loss_CategoricalCrossentropy(Loss):
                     y_pred_clipped * y_true,
                     axis=1
                     )
-        
 
-        # Get unnormalized probabilities
-        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        
-        # Normalize them for each sample
-        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-
-        self.output = probabilities
+        # Losses
+        negative_log_likelihoods = -np.log(correct_confidences)
+        return negative_log_likelihoods
 
 # Create dataset
 x, y = spiral_data(samples=100, classes=3)
@@ -100,6 +102,9 @@ dense2 = Layer_Dense(3, 3)
 
 # Create Softmax activation (to be used with Dense layer):
 activation2 = Activation_Softmax()
+
+# Create loss function
+loss_function = Loss_CategoricalCrossentropy()
 
 # Make a forward pass of our training data through this layer
 dense1.forward(x)
@@ -118,3 +123,10 @@ activation2.forward(dense2.output)
 
 # First few samples
 print(activation2.output[:5])
+
+# Perform a forward pass through loss function
+# it takes the output of second dense layer here and returns loss
+loss = loss_function.calculate(activation2.output, y)
+
+# Print loss value
+print('loss:', loss)
