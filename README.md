@@ -1,4 +1,4 @@
 # neural-network
-A neural network from scratch.
+Neural network from scratch.
 
-Build a plain neural network in Python.
+A plain neural network in Python.
