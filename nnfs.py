@@ -31,7 +31,24 @@ class Activation_Softmax:
     
     # Forward pass
     def forward(self, inputs):
-        
+
+
+# Common loss class
+class Loss:
+
+    # Calculates the data and regularization losses
+    # given model output and ground truth values
+    def calculate(self, output, y):
+
+        # Calcualte sample losses
+        sample_losses = self.forward(output, y)
+
+        # Calcualte mean loss
+        data_loss = np.mean(sample_losses)
+
+        # Return loss
+        return data_loss
+
         # Get unnormalized probabilities
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         
