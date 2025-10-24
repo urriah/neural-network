@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import nnfs
 from nnfs.datasets import vertical_data
+from nnfs.datasets import spiral_data
 import numpy as np
 
 nnfs.init()
@@ -57,7 +58,7 @@ class Loss_CategoricalCrossentropy(Loss):
         return negative_log_likelihoods
 
 # Create dataset
-X, y = vertical_data(samples=100, classes=3)
+X, y = spiral_data(samples=100, classes=3)
 
 # Create model
 dense1 = Layer_Dense(2, 3) # first dense layer, 2 inputs
@@ -106,3 +107,9 @@ for iteration in range(10000):
         best_dense2_weights = dense2.weights.copy() 
         best_dense2_biases = dense2.biases.copy()
         lowest_loss = loss
+    # Revert weights and biases
+    else:
+        dense1.weights = best_dense1_weights.copy()
+        dense1.biases = best_dense1_biases.copy()
+        dense2.weights = best_dense2_weights.copy()
+        dense2.biases = best_dense2_biases.copy()
