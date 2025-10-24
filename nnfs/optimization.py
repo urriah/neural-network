@@ -77,11 +77,11 @@ best_dense2_biases = dense2.biases.copy()
 
 for iteration in range(10000):
 
-    # Generate a new set of weights for iteration
-    dense1.weights = 0.05 * np.random.randn(2, 3)
-    dense1.biases = 0.05 * np.random.randn(1, 3)
-    dense2.weights = 0.05 * np.random.randn(3, 3)
-    dense2.biases = 0.05 * np.random.randn(1, 3)
+    # Update weights with some small random values
+    dense1.weights += 0.05 * np.random.randn(2, 3)
+    dense1.biases += 0.05 * np.random.randn(1, 3)
+    dense2.weights += 0.05 * np.random.randn(3, 3)
+    dense2.biases += 0.05 * np.random.randn(1, 3)
 
     # Perform a forward paass of the training data through this layer
     dense1.forward(X)
