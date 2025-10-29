@@ -41,10 +41,10 @@ dmul_dx2 = w[2]
 dmul_dw0 = x[0]
 dmul_dw1 = x[1]
 dmul_dw2 = x[2]
-drelu_dx0 = drelu_dxw0 * dmul_dx0
-drelu_dw0 = drelu_dxw0 * dmul_dw0
-drelu_dx1 = drelu_dxw1 * dmul_dx1
-drelu_dw1 = drelu_dxw1 * dmul_dw1
-drelu_dx2 = drelu_dxw2 * dmul_dx2
-drelu_dw2 = drelu_dxw2 * dmul_dw2
+drelu_dx0 = drelu_dxw0 * w[0]
+drelu_dw0 = drelu_dxw0 * x[0]
+drelu_dx1 = drelu_dxw1 * w[1]
+drelu_dw1 = drelu_dxw1 * x[1]
+drelu_dx2 = drelu_dxw2 * w[2]
+drelu_dw2 = drelu_dxw2 * w[2]
 print(drelu_dx0, drelu_dw0, drelu_dx1, drelu_dw1, drelu_dx2, drelu_dw2)
