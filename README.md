@@ -1,2 +1,6 @@
 # neural-network
-python program of a neural network from scratch
+>python neural network program from scratch
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A python program of a neural network from scratch
