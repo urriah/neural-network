@@ -1,5 +1,5 @@
 # neural-network
->python neural network program to predict a number
+> python program to predict a digit
 
 [![License: MIT](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/license/Apache-2.0)
 
