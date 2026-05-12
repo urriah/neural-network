@@ -1,14 +1,7 @@
-import numpy as np
+from nnfs.datasets import spiral_data
+import matplotlib.pyplot as plt
 
-inputs = [[1, 2, 3, 2.5],
-          [2.0, 5.0, -1.0, 2.0],
-          [-1.5, 2.7, 3.3, -0.8]]
-weights = [[0.2, 0.8, -0.5, 1],
-           [0.5, -0.91, 0.26, -0.5],
-           [-0.26, -0.27, 0.17, 0.87]]
-biases = [2, 3, 0.5]
+X, y = spiral_data(samples=100, classes=3)
 
-layer_outputs = np.dot(inputs, np.array(weights).T) + biases
-
-print(layer_outputs)
-
+plt.scatter(X[:,0], X[:,1])
+plt.show()
