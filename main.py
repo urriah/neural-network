@@ -1,48 +1,10 @@
-output = sum(inputs * weights) + bias
+inputs = [1.0, 2.0, 3.0, 2.5]
+weights = [0.2, 0.8, -0.5, 1.0]
+bias = 2.0
 
-output = activition(output)
+output = (inputs[0]*weights[0] +
+          inputs[1]*weights[1] +
+          inputs[2]*weights[2] +
+          inputs[3]*weights[3] + bias)
 
-loss = -np.log(
-        np.sum(
-            y * np.exp(
-                np.dot(
-                    np.maximum(
-                        0,
-                        np.dot(
-                            np.maximum(
-                                0,
-                                np.dot(
-                                    X,
-                                    w1.T
-                                    ) + b1
-                                ),
-                            w2.T
-                            ) + b2
-                        ),
-                    w3.T
-                    ) + b3
-                ) /
-            np.sum(
-                np.exp(
-                    np.dot(
-                        np.maximum(
-                            0,
-                            np.dot(
-                                np.maximum(
-                                    0,
-                                    np.dot(
-                                        X,
-                                        w1.T
-                                        ) + b1
-                                    ),
-                                w2.T
-                                ) + b2
-                            ),
-                        w3.T
-                        ) + b3
-                    ),
-                axis=1,
-                keepdims=True
-                )
-            )
-        )
+print(output)
