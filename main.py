@@ -48,3 +48,5 @@ activation2.forward(dense2.output)
 
 print(activation2.output[:5])
 
+#test
+
