@@ -1,41 +1,33 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
-def f(x):
-    return 2*x**2
+dvalues = np.array([[1., 1., 1.],
+		    [2., 2., 2.],
+		    [3., 3., 3.]])
 
-x = np.array(np.arange(0,5,0.001))
-y = f(x)
+inputs = np.array([[1, 2, 3, 2.5],
+		   [2., 5., -1, 2],
+		   [-1.5, 2.7, 3.3, -0.8]])
 
-plt.plot(x, y)
+weights = np.array([[0.2, 0.8, -0.5, 1],
+		    [0.5, -0.91, 0.26, -0.5],
+		    [-0.26, -0.27, 0.17, 0.87]]).T
 
-colors = ['k', 'g', 'r', 'b', 'c']
+biases = np.array([[2, 3, 0.5]])
 
-def approximate_tangent_line(x, approximate_derivative):
-    return (approximate_derivative*x) + b
+layer_outputs = np.dot(inputs, weights) + biases
+relu_outputs = np.maximum(0, layer_outputs)
 
-for i in range(5):
-    p2_delta = 0.0001
-    x1 = i
-    x2 = x1 + p2_delta
+drelu = relu_outputs.copy()
+drelu[relu_outputs <= 0] = 0
 
-    y1 = f(x1)
-    y2 = f(x2)
+dinputs = np.dot(drelu, weights.T)
 
-    print((x1, y1), (x2, y2))
-    approximate_derivative = (y2-y1)/(x2-x1)
-    b = y2-(approximate_derivative*x2)
+dweights = np.dot(inputs.T, drelu)
 
-    to_plot = [x1-0.9, x1, x1+0.9]
+dbiases = np.sum(drelu, axis=0, keepdims=True)
 
-    plt.scatter(x1, y1, c=colors[i])
-    plt.plot([point for point in to_plot],
-             [approximate_tangent_line(point, approximate_derivative)
-              for point in to_plot],
-             c=colors[i])
+weights += 0.001 * dweights
+biases += 0.001 *dbiases
 
-    print('Approximate derivative for f(x)',
-          f'where x = {x1} is {approximate_derivative}')
-plt.show()
-
-# test
+print(weights)
+print(biases)
