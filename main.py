@@ -24,6 +24,25 @@ class Layer_Dense:
     def backward(self, dvalues):
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+
+	if self.weight_regularizer_l1 > 0:
+	    dL1 = np.ones_like(self.weights)
+	    dL1[self.weights < 0] = -1
+	    self.dweights += self.weight_regularizer_l1 * dL1
+
+	if self.weight_regularizer_l2 > 0:
+	    self.dweights += 2 * self.weight_regularizer_l2 * \
+			     self.weights
+
+	if self.bias_regularizer_l1 > 0:
+	    dL1 = np.ones_like(self.biases)
+	    dL1[self.weights < 0] = -1
+	    self.dweights += self.biases_regularizer_l1 * dL1
+
+	if self.bias_regularizer_l2 > 0:
+	    self.dbiases += 2 * self.weights_regularizer_l2 * \
+			    self.biases
+
         self.dinputs = np.dot(dvalues, self.weights.T)
 
 class Activation_ReLU:
@@ -302,7 +321,8 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
 X, y = spiral_data(samples=100, classes=3)
 
-dense1 = Layer_Dense(2, 64)
+dense1 = Layer_Dense(2, 64, weight_regularizer_L2=5e-4,
+			    bias_regularizer_L2=5e-4)
 
 activation1 = Activation_ReLU()
 
@@ -329,7 +349,9 @@ for epoch in range(10001):
     if not epoch % 100:
         print(f'epoch: {epoch}, ' +
               f'acc: {accuracy:.3f}, ' +
-              f'loss: {loss:.3f}, ' +
+              f'loss: {loss:.3f}, (' +
+	      f'data_loss: {data_loss:.3f}, ' +
+	      f'reg_loss: {regularization_loss:.3f}), ' +
               f'lr: {optimizer.current_learning_rate}')
 
     loss_activation.backward(loss_activation.output, y)
