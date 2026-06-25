@@ -339,6 +339,14 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
 
+class Activation_Linear:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = inputs
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues.copy()
+
 class Loss_BinaryCrossentropy(Loss):
     def forward(self, y_pred, y_true):
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
