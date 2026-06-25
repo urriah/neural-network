@@ -6,15 +6,15 @@ nnfs.init()
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons,
-		 weight_regularizer_L1=0, weight_regularizer_L2=0,
-		 bias_regularizer_L1=0, bias_regularizer_L2=0):
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1, n_neurons))
+		 weight_regularizer_l1=0, weight_regularizer_l2=0,
+		 bias_regularizer_l1=0, bias_regularizer_l2=0):
+	    self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+	    self.biases = np.zeros((1, n_neurons))
 
-	self.weight_regularizer_l1 = weight_regularizer_l1
-	self.weight_regularizer_l2 = weight_regularizer_l2
-	self.bias_regularizer_l1 = bias_regularizer_l1
-	self.bias_regularizer_l2 = bias_regularizer_l2
+	    self.weight_regularizer_l1 = weight_regularizer_l1
+	    self.weight_regularizer_l2 = weight_regularizer_l2
+	    self.bias_regularizer_l1 = bias_regularizer_l1
+	    self.bias_regularizer_l2 = bias_regularizer_l2
 
     def forward(self, inputs):
         self.inputs = inputs
@@ -23,24 +23,24 @@ class Layer_Dense:
     def backward(self, dvalues):
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
+	
+        if self.weight_regularizer_l1 > 0:
+            dL1 = np.ones_like(self.weights)
+            dL1[self.weights < 0] = -1
+            self.dweights += self.weight_regularizer_l1 * dL1
 
-	if self.weight_regularizer_l1 > 0:
-	    dL1 = np.ones_like(self.weights)
-	    dL1[self.weights < 0] = -1
-	    self.dweights += self.weight_regularizer_l1 * dL1
+        if self.weight_regularizer_l2 > 0:
+            self.dweights += 2 * self.weight_regularizer_l1 * \
+                             self.weights
 
-	if self.weight_regularizer_l2 > 0:
-	    self.dweights += 2 * self.weight_regularizer_l2 * \
-			     self.weights
+        if self.bias_regularizer_l1 > 0:
+            dL1 = np.ones_like(self.biases)
+            dL1[self.weights < 0] = -1
+            self.dweights += self.bias_regularizer_l1 * dL1
 
-	if self.bias_regularizer_l1 > 0:
-	    dL1 = np.ones_like(self.biases)
-	    dL1[self.weights < 0] = -1
-	    self.dweights += self.biases_regularizer_l1 * dL1
-
-	if self.bias_regularizer_l2 > 0:
-	    self.dbiases += 2 * self.weights_regularizer_l2 * \
-			    self.biases
+        if self.bias_regularizer_l2 > 0:
+            self.dbiases += 2 * self.bias_regularizer_l2 * \
+                            self.biases
 
         self.dinputs = np.dot(dvalues, self.weights.T)
 
@@ -245,28 +245,28 @@ class Loss:
 
         return data_loss
 
-    def regularization_loss(self, Layer):
-	regularization_loss = 0
+    def regularization_loss(self, layer):
+        regularization_loss = 0
 
-	if layer.weight_regularizer_l1 > 0:
-	    regularization_loss += layer.weight_regularizer_l1 * \
+        if layer.weight_regularizer_l1 > 0:
+            regularization_loss += layer.weight_regularizer_l1 * \
 	    			   np.sum(np.abs(layer.weights))
 
-	if layer.weight_regularizer_l2 > 0:
-	    regularization_loss += layer.weight_regularizer_l2 * \
+        if layer.weight_regularizer_l2 > 0:
+            regularization_loss += layer.weight_regularizer_l2 * \
 				   np.sum(layer.weights * \
 					  layer.weights)
 
-	if layer.bias_regularizer_l1 > 0:
-	   regularization_loss += layer.bias_regularizer_l1 * \
+        if layer.bias_regularizer_l1 > 0:
+            regularization_loss += layer.bias_regularizer_l1 * \
 				  np.sum(np.abs(layer.biases))
 
-	if layer.bias_regularizer_l2 > 0:
-	   regularization_loss += layer.bias_regularizer_l2 * \
+        if layer.bias_regularizer_l2 > 0:
+            regularization_loss += layer.bias_regularizer_l2 * \
 				  np.sum(layer.biases * \
 					 layer.biases)
 
-	return regularization_loss
+        return regularization_loss
 
 class Loss_CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
@@ -320,8 +320,8 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
 X, y = spiral_data(samples=100, classes=3)
 
-dense1 = Layer_Dense(2, 64, weight_regularizer_L2=5e-4,
-			    bias_regularizer_L2=5e-4)
+dense1 = Layer_Dense(2, 64, weight_regularizer_l2=5e-4,
+			    bias_regularizer_l2=5e-4)
 
 activation1 = Activation_ReLU()
 
@@ -338,7 +338,13 @@ for epoch in range(10001):
 
     dense2.forward(activation1.output)
 
-    loss = loss_activation.forward(dense2.output, y)
+    data_loss = loss_activation.forward(dense2.output, y)
+
+    regularization_loss = \
+        loss_activation.loss.regularization_loss(dense1) + \
+        loss_activation.loss.regularization_loss(dense2)
+
+    loss = data_loss + regularization_loss
 
     predictions = np.argmax(loss_activation.output, axis=1)
     if len(y.shape) == 2:
