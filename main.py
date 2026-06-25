@@ -57,6 +57,14 @@ class Layer_Dropout():
     def backward(self, dvalues):
         self.dinputs = dvalues * self.binary_mask
 
+class Activation_Sigmoid:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1 - self.output) * self.output
+
 class Activation_ReLU:
     def forward(self, inputs):
         self.inputs = inputs
