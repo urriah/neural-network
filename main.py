@@ -44,6 +44,19 @@ class Layer_Dense:
 
         self.dinputs = np.dot(dvalues, self.weights.T)
 
+class Layer_Dropout():
+    def __init__(self, rate):
+        self.rate = 1 - rate
+
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.binary_mask = np.random.binomial(1, self.rate,
+                           size=inputs.shape) / self.rate
+        self.output = inputs * self.binary_mask
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * self.binary_mask
+
 class Activation_ReLU:
     def forward(self, inputs):
         self.inputs = inputs
@@ -325,6 +338,8 @@ dense1 = Layer_Dense(2, 64, weight_regularizer_l2=5e-4,
 
 activation1 = Activation_ReLU()
 
+dropout1 = Layer_Dropout(0.1)
+
 dense2 = Layer_Dense(64, 3)
 
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
@@ -335,6 +350,8 @@ for epoch in range(10001):
     dense1.forward(X)
 
     activation1.forward(dense1.output)
+    
+    dropout1.forward(activation1.output)
 
     dense2.forward(activation1.output)
 
@@ -361,6 +378,7 @@ for epoch in range(10001):
 
     loss_activation.backward(loss_activation.output, y)
     dense2.backward(loss_activation.dinputs)
+    dropout1.backward(dense2.dinputs)
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
 
