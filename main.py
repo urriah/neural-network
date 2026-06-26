@@ -273,7 +273,7 @@ class Loss:
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
 
-        return data_loss
+        return data_loss, self.regularization_loss()
 
     def regularization_loss(self):
         regularization_loss = 0
@@ -299,7 +299,7 @@ class Loss:
 
         return regularization_loss
 
-    def remember_trainable_layers(self, trainable_Layers):
+    def remember_trainable_layers(self, trainable_layers):
         self.trainable_layers = trainable_layers
 
     def calculate(self, output, y):
@@ -426,9 +426,10 @@ class Model():
     def add(self, layer):
         self.layers.append(layer)
 
-    def set(self, *, Loss, optimizer):
+    def set(self, *, Loss, optimizer, accuracy):
         self.loss = Loss
         self.optimizer = optimizer
+        self.accuracy = accuracy
 
     def finalize(self):
         self.input_layer = Layer_Input()
@@ -445,21 +446,44 @@ class Model():
             else:
                 self.layers[i].prev = self.layers[i-1]
                 self.layers[i].next = self.loss
-                
+                self.output_layer_activation = self.layers[i]
+
         if hasattr(self.layers[i], 'weights'):
             self.trainable_layers.append(self.layers[i])
-        else:
-            self.layers[i].prev = self.layers[i-1]
-            self.layers[i].next = self.loss
-            self.output_layer_activation = self.layers[i]
+        
+        self.loss.remember_trainable_layers(
+            self.trainable_layers
+        )
 
     def train(self, X, y, *, epochs=1, print_every=1):
+        self.accuracy.init(y)
+
         for epoch in range(1, epochs+1):
             output = self.forward(X)
 
-            print(output)
-            exit()
+            data_loss, regularization_loss = \
+                self.loss.calculate(output, y)
+            loss = data_loss + regularization_loss
 
+            predictions = self.output_layer_activation.predictions(
+                              output)
+            accuracy = self.accuracy.calculate(predictions, y)
+
+            self.backward(output, y)
+
+            self.optimizer.pre_update_params()
+            for layer in self.trainable_layers:
+                 self.optimizer.update_params(layer)
+            self.optimizer.post_update_params()
+
+            if not epoch % print_every:
+               print(f'epoch: {epoch}, ' +
+                     f'acc: {accuracy:.3f}, ' +
+                     f'loss: {loss:.3f} (' +
+                     f'data_loss: {data_loss:.3f}, ' +
+                     f'reg_loss: {regularization_loss:.3f}), ' +
+                     f'lr: {self.optimizer.current_learning_rate}')
+    
     def forward(self, X):
         self.input_layer.forward(X)
 
@@ -467,6 +491,30 @@ class Model():
             layer.forward(layer.prev.output)
 
         return layer.output
+
+    def backward(self, output, y):
+        self.loss.backward(output, y)
+
+        for layer in reversed(self.layers):
+            layer.backward(layer.next.dinputs)
+
+class Accuracy:
+    def calculate(self, predictions, y):
+        comparisons = self.compare(predictions, y)
+        accuracy = np.mean(comparisons)
+
+        return accuracy
+
+class Accuracy_Regression(Accuracy):
+    def __init__(self):
+        self.precision = None
+
+    def init(self, y, reinit=False):
+        if self.precision is None or reinit:
+            self.precision = np.std(y) / 250
+
+    def compare(self, predictions, y):
+        return np.absolute(predictions - y) < self.precision
 
 X, y = sine_data()
 
@@ -482,10 +530,9 @@ model.add(Activation_Linear())
 model.set(
     Loss=Loss_MeanSquaredError(),
     optimizer=Optimizer_Adam(learning_rate=0.005, decay=1e-3),
+    accuracy=Accuracy_Regression()
 )
 
 model.finalize()
 
 model.train(X, y, epochs = 10000, print_every=100)
-
-print(model.layers)
