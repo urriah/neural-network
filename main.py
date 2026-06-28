@@ -44,6 +44,13 @@ class Layer_Dense:
 
         self.dinputs = np.dot(dvalues, self.weights.T)
 
+    def get_parameters(self):
+        return self.weights, self.biases
+
+    def set_parameters(self, weights, biases):
+        self.weights = weights
+        self.biases = biases
+
 
 class Layer_Dropout:
 
@@ -381,7 +388,6 @@ class Loss:
         self.accumulated_count = 0
 
 
-
 class Loss_CategoricalCrossentropy(Loss):
 
     def forward(self, y_pred, y_true):
@@ -415,6 +421,7 @@ class Loss_CategoricalCrossentropy(Loss):
 
         self.dinputs = -y_true / dvalues
         self.dinputs = self.dinputs / samples
+
 
 class Activation_Softmax_Loss_CategoricalCrossentropy():
 
@@ -551,10 +558,15 @@ class Model:
         self.layers.append(layer)
 
 
-    def set(self, *, loss, optimizer, accuracy):
-        self.loss = loss
-        self.optimizer = optimizer
-        self.accuracy = accuracy
+    def set(self, *, loss=None, optimizer=None, accuracy=None):
+        if loss is not None:
+            self.loss = loss
+
+        if optimizer is not None:
+            self.optimizer = optimizer
+
+        if accuracy is not None:
+            self.accuracy = accuracy
 
     def finalize(self):
 
@@ -583,9 +595,10 @@ class Model:
                 self.trainable_layers.append(self.layers[i])
 
 
-        self.loss.remember_trainable_layers(
-            self.trainable_layers
-        )
+            if self.loss is not None:
+                self.loss.remember_trainable_layers(
+                    self.trainable_layers
+                )
 
         if isinstance(self.layers[-1], Activation_Softmax) and \
            isinstance(self.loss, Loss_CategoricalCrossentropy):
@@ -675,38 +688,8 @@ class Model:
 
             if validation_data is not None:
 
-                self.loss.new_pass()
-                self.accuracy.new_pass()
-
-                for step in range(validation_steps):
-
-                    if batch_size is None:
-                        batch_X = X_val
-                        batch_y = y_val
-
-
-                    else:
-                        batch_X = X_val[
-                            step*batch_size:(step+1)*batch_size
-                        ]
-                        batch_y = y_val[
-                            step*batch_size:(step+1)*batch_size
-                        ]
-
-                    output = self.forward(batch_X, training=False)
-
-                    self.loss.calculate(output, batch_y)
-
-                    predictions = self.output_layer_activation.predictions(
-                                      output)
-                    self.accuracy.calculate(predictions, batch_y)
-
-                validation_loss = self.loss.calculate_accumulated()
-                validation_accuracy = self.accuracy.calculate_accumulated()
-
-                print(f'validation, ' +
-                      f'acc: {validation_accuracy:.3f}, ' +
-                      f'loss: {validation_loss:.3f}')
+                self.evaluate(*validation_data,
+                              batch_size=batch_size)
 
     def forward(self, X, training):
 
@@ -735,6 +718,62 @@ class Model:
 
         for layer in reversed(self.layers):
             layer.backward(layer.next.dinputs)
+
+    def evaluate(self, X_val, y_val, *, batch_size=None):
+
+        validation_steps = 1
+
+        if batch_size is not None:
+            validation_steps = len(X_val) // batch_size
+
+            if validation_steps * batch_size < len(X_val):
+                validation_steps += 1
+
+        self.loss.new_pass()
+        self.accuracy.new_pass()
+
+        for step in range(validation_steps):
+            if batch_size is None:
+                batch_X = X_val
+                batch_y = y_val
+
+            else:
+                batch_X = X_val[
+                    step*batch_size:(step+1)*batch_size
+                ]
+                batch_y = y_val[
+                    step*batch_size:(step+1)*batch_size
+                ]
+
+            output = self.forward(batch_X, training=False)
+
+            self.loss.calculate(output, batch_y)
+
+            predictions = self.output_layer_activation.predictions(
+                              output)
+            self.accuracy.calculate(predictions, batch_y)
+
+        validation_loss = self.loss.calculate_accumulated()
+        validation_accuracy = self.accuracy.calculate_accumulated()
+
+        print(f'validation, ' +
+              f'acc: {validation_accuracy:.3f}, ' +
+              f'loss: {validation_loss:.3f}')
+
+    def get_parameters(self):
+
+        parameters = []
+
+        for layer in self.trainable_layers:
+            parameters.append(layer.get_parameters())
+
+        return parameters
+
+    def set_parameters(self, parameters):
+
+        for parameter_set, layer in zip(parameters,
+                                        self.trainable_layers):
+            layer.set_parameters(*parameter_set)
 
 
 def load_mnist_dataset(dataset, path):
@@ -796,3 +835,25 @@ model.finalize()
 
 model.train(X, y, validation_data=(X_test, y_test),
             epochs=10, batch_size=128, print_every=100)
+
+parameters = model.get_parameters()
+
+model = Model()
+
+model.add(Layer_Dense(X.shape[1], 128))
+model.add(Activation_ReLU())
+model.add(Layer_Dense(128, 128))
+model.add(Activation_ReLU())
+model.add(Layer_Dense(128, 10))
+model.add(Activation_Softmax())
+
+model.set(
+    loss=Loss_CategoricalCrossentropy(),
+    accuracy=Accuracy_Categorical()
+)
+
+model.finalize()
+
+model.set_parameters(parameters)
+
+model.evaluate(X_test, y_test)
