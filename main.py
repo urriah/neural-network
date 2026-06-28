@@ -44,6 +44,8 @@ class Layer_Dense:
 
         self.dinputs = np.dot(dvalues, self.weights.T)
 
+    def get_parameters(self):
+        return self.weights, self.biases
 
 class Layer_Dropout:
 
@@ -485,8 +487,6 @@ class Loss_MeanAbsoluteError(Loss):  # L1 loss
         self.dinputs = np.sign(y_true - dvalues) / outputs
         self.dinputs = self.dinputs / samples
 
-
-
 class Accuracy:
 
     def calculate(self, predictions, y):
@@ -523,7 +523,6 @@ class Accuracy_Categorical(Accuracy):
             y = np.argmax(y, axis=1)
         return predictions == y
 
-
 class Accuracy_Regression(Accuracy):
 
     def __init__(self):
@@ -536,7 +535,6 @@ class Accuracy_Regression(Accuracy):
 
     def compare(self, predictions, y):
         return np.absolute(predictions - y) < self.precision
-
 
 class Model:
 
@@ -743,6 +741,15 @@ class Model:
               f'acc: {validation_accuracy:.3f}, ' +
               f'loss: {validation_loss:.3f}')
 
+    def get_parameters(self):
+
+        parameters = []
+
+        for layer in self.trainable_layers:
+            parameters.append(layer.get_parameters())
+
+        return parameters
+
 def load_mnist_dataset(dataset, path):
 
     labels = os.listdir(os.path.join(path, dataset))
@@ -799,5 +806,5 @@ model.finalize()
 model.train(X, y, validation_data=(X_test, y_test),
             epochs=10, batch_size=128, print_every=100)
 
-model.evaluate(X_test, y_test)
-
+parameters = model.get_parameters()
+print(parameters)
