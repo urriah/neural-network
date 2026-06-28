@@ -1,5 +1,5 @@
 # neural-network
-> python program to predict clothes
+> python neural network from scratch
 
 [![License: MIT](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/license/Apache-2.0)
 
