@@ -1,6 +1,10 @@
 import numpy as np
 import cv2
 import os
+import nnfs
+import matplotlib.pyplot as plt
+
+nnfs.init()
 
 def load_mnist_dataset(dataset, path):
 
@@ -30,3 +34,9 @@ X, y, X_test, y_test = create_data_mnist('fashion_mnist_images')
 
 X = X.reshape(X.shape[0], -1)
 X_test = X_test.reshape(X_test.shape[0], -1)
+
+keys = np.array(range(X.shape[0]))
+np.random.shuffle(keys)
+
+plt.imshow((X[4].reshape(28, 28)))
+plt.show()
